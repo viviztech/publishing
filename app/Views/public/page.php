@@ -1,0 +1,1 @@
+<article class="shell static-page"><header class="page-header"><p class="eyebrow"><?=e(setting('site_name','Newsroom'))?></p><h1><?=e($page['title'])?></h1></header><div class="prose"><?=$page['content']?></div></article>

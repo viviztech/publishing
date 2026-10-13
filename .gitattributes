@@ -1,0 +1,14 @@
+* text=auto
+*.php text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.sql text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.svg text eol=lf
+*.ttf -text
+*.png -text
+*.jpg -text
+*.jpeg -text
+*.webp -text
+*.gif -text

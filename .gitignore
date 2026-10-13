@@ -1,0 +1,39 @@
+# Server credentials and local environment overrides
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Runtime state, database backups, source snapshots, local MySQL, and sessions
+/storage/*
+!/storage/cache/
+!/storage/logs/
+!/storage/backups/
+!/storage/tmp/
+/storage/cache/*
+/storage/logs/*
+/storage/backups/*
+/storage/tmp/*
+!/storage/*/.gitkeep
+
+# Editorial media is deployed separately from source code
+/public/uploads/*
+!/public/uploads/.gitkeep
+
+# Browser recordings, screenshots, and local tool state
+/.playwright-cli/
+/output/
+/.agents/
+/.codex/
+/.aws/
+node_modules/
+vendor/
+*.log
+*.tmp
+*.zip
+*.sql.gz
+.DS_Store
+Thumbs.db

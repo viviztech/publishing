@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 430 82" role="img" aria-labelledby="title description">
+  <title id="title">Wisdom News</title>
+  <desc id="description">Wisdom News logo with a W emblem and Tamil tagline</desc>
+  <circle cx="41" cy="41" r="36" fill="#123e68"/>
+  <text x="41" y="54" text-anchor="middle" fill="#fff" font-family="Georgia, 'Times New Roman', serif" font-size="40" font-weight="700">W</text>
+  <text x="92" y="40" fill="#123e68" font-family="Georgia, 'Times New Roman', serif" font-size="39" font-weight="700" letter-spacing="-1">Wisdom News</text>
+  <text x="94" y="65" fill="#6e7f8f" font-family="'Noto Sans Tamil', 'Nirmala UI', sans-serif" font-size="14" font-weight="600">அறிவின் வழி • உண்மையின் மொழி</text>
+</svg>

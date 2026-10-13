@@ -1,0 +1,18 @@
+Options -Indexes
+RewriteEngine On
+
+# Keep application source, credentials, database scripts, and runtime data private.
+RewriteRule ^(?:app|database|scripts|storage|tests|node_modules|docs|\.git|\.github)(?:/|$) - [F,L,NC]
+RewriteRule ^(?:\.env(?:\..*)?|package(?:-lock)?\.json|tsconfig\.json|README\.md)$ - [F,L,NC]
+
+# Serve only the compiled public assets from the public directory.
+RewriteRule ^assets/(.*)$ public/assets/$1 [END]
+
+# Serve mirrored and local editorial images without executing uploaded files.
+RewriteRule ^uploads/([A-Za-z0-9/_-]+\.(?:jpe?g|png|webp|gif))$ public/uploads/$1 [END,NC]
+
+# Prevent visitors from bypassing the front controller through /public/.
+RewriteRule ^public(?:/|$) - [F,L,NC]
+
+# Send every application route through the public front controller.
+RewriteRule ^ public/index.php [QSA,END]

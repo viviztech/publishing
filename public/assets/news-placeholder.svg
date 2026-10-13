@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title description">
+  <title id="title">The Daily Chronicle</title>
+  <desc id="description">Editorial story image placeholder</desc>
+  <rect width="1600" height="900" fill="#dedbd4"/>
+  <path d="M0 720 440 350l230 205 210-175 720 520H0Z" fill="#cbc6bd"/>
+  <circle cx="1240" cy="245" r="105" fill="#b8b2a8"/>
+  <text x="800" y="800" text-anchor="middle" fill="#5d5952" font-family="Georgia,serif" font-size="48" font-weight="700">THE DAILY CHRONICLE</text>
+</svg>

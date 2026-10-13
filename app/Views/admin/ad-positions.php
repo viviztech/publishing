@@ -1,0 +1,11 @@
+<section class="admin-card" id="stories">
+  <div class="card-header"><div><h2>Advertising inventory</h2><p>20 connected placements. Enable a position and assign an active campaign to display an advertisement.</p></div><a class="primary-button" href="<?=e(url('/admin/advertisements/create'))?>">Create campaign</a></div>
+  <div class="ad-help"><strong>Flexible, responsive inventory</strong><p>Banner slots support image creatives or trusted ad-network HTML. Sidebar slots support rectangles and skyscrapers. Sizes below are recommended desktop dimensions; creatives must adapt to smaller screens. One eligible campaign with the highest priority is shown per slot. Empty slots collapse automatically.</p><p>In-article ads appear between paragraphs in longer stories and after the text in short stories. Disabled, inactive, future, and expired campaigns stay hidden.</p></div>
+  <form class="filter-row inventory-search"><input type="search" name="q" value="<?=e($q)?>" aria-label="Search ad positions" placeholder="Find a position"><button class="secondary-button">Search</button></form>
+  <div class="table-wrap"><table><thead><tr><th>Position</th><th>Placement</th><th>Suggested size</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+  <?php foreach($items as $item): $definition=$definitions[$item['slug']]??null; ?>
+    <tr><td data-label="Position"><strong><?=e($item['name'])?></strong><small class="cell-note"><?=e($item['slug'])?></small></td><td data-label="Placement"><?=e($definition?$definition[1]:$item['description'])?><?php if(!$definition):?><small class="cell-note">This custom position is not connected to a template.</small><?php endif;?></td><td data-label="Suggested size"><?=(int)$item['recommended_width']?> × <?=(int)$item['recommended_height']?></td><td data-label="Status"><span class="status <?=$item['is_active']?'published':'archived'?>"><?=$item['is_active']?'Enabled':'Disabled'?></span></td><td data-label="Actions"><div class="row-actions"><a href="<?=e(url('/admin/ad-positions/edit/'.$item['id']))?>">Edit</a><?php if($definition):?><a href="<?=e(url($previews[$definition[4]]))?>" target="_blank" rel="noopener">Preview page ↗</a><?php endif;?></div></td></tr>
+  <?php endforeach; ?>
+  </tbody></table></div>
+  <?php $query=array_filter(['q'=>$q]); require __DIR__.'/../partials/pagination.php'; ?>
+</section>

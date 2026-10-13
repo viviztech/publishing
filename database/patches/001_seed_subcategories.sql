@@ -1,0 +1,17 @@
+INSERT IGNORE INTO subcategories(category_id,name,slug,description,sort_order,is_active) VALUES
+((SELECT id FROM categories WHERE slug='politics'),'Elections','elections','Campaigns, voting, and election administration.',1,1),
+((SELECT id FROM categories WHERE slug='politics'),'Government','government','Government decisions, institutions, and public administration.',2,1),
+((SELECT id FROM categories WHERE slug='world'),'Asia','asia','Reporting from across Asia.',1,1),
+((SELECT id FROM categories WHERE slug='world'),'Europe','europe','Reporting from Europe.',2,1),
+((SELECT id FROM categories WHERE slug='india'),'National','national','National affairs and developments across India.',1,1),
+((SELECT id FROM categories WHERE slug='india'),'Education','education','Schools, universities, learning, and education policy.',2,1),
+((SELECT id FROM categories WHERE slug='tamil-nadu'),'Chennai','chennai','News and public life in Chennai.',1,1),
+((SELECT id FROM categories WHERE slug='tamil-nadu'),'Districts','districts','Reporting from districts across Tamil Nadu.',2,1),
+((SELECT id FROM categories WHERE slug='business'),'Economy','economy','Economic policy, employment, and growth.',1,1),
+((SELECT id FROM categories WHERE slug='business'),'Markets','markets','Companies, investing, and financial markets.',2,1),
+((SELECT id FROM categories WHERE slug='technology'),'Artificial Intelligence','artificial-intelligence','AI research, products, policy, and industry.',1,1),
+((SELECT id FROM categories WHERE slug='technology'),'Startups','startups','Entrepreneurs, funding, and emerging companies.',2,1),
+((SELECT id FROM categories WHERE slug='sports'),'Cricket','cricket','Cricket news, matches, and analysis.',1,1),
+((SELECT id FROM categories WHERE slug='sports'),'Football','football','Football competitions, clubs, and players.',2,1),
+((SELECT id FROM categories WHERE slug='culture'),'Entertainment','entertainment','Film, television, music, and performance.',1,1),
+((SELECT id FROM categories WHERE slug='culture'),'Lifestyle','lifestyle','Food, travel, design, and everyday living.',2,1);
