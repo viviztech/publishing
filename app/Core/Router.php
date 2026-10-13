@@ -11,6 +11,7 @@ final class Router
 
     public function dispatch(string $method, string $uri): void
     {
+        if ($method === 'HEAD') $method = 'GET';
         $path = rawurldecode('/' . trim(parse_url($uri, PHP_URL_PATH) ?: '/', '/'));
         if ($path === '//') $path = '/';
         foreach ($this->routes as [$verb, $route, $handler]) {

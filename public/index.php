@@ -11,7 +11,7 @@ $router=new Router();
 $public=new PublicController();
 $admin=new AdminController();
 
-if(($_SERVER['REQUEST_METHOD']??'GET')==='GET'&&($legacy=\App\Services\LegacyRedirects::resolve($_SERVER['REQUEST_URI']??'/'))){
+if(in_array($_SERVER['REQUEST_METHOD']??'GET',['GET','HEAD'],true)&&($legacy=\App\Services\LegacyRedirects::resolve($_SERVER['REQUEST_URI']??'/'))){
     header('Location: '.url($legacy),true,301);exit;
 }
 
