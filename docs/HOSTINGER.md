@@ -82,6 +82,8 @@ See [Hostinger cron jobs](https://www.hostinger.com/support/1583465-how-to-set-u
 
 ## Verify before completing the cutover
 
+Flush the full CDN cache from hPanel → Websites → wisdomnews.in → Dashboard → Performance → CDN → Flush cache. Check fresh anonymous requests afterwards; a browser session can bypass an old cached page while new visitors still receive it. An origin-only check or a LiteSpeed purge signal does not prove every CDN node is refreshed. See [Hostinger cache clearing](https://www.hostinger.com/support/1583501-how-to-clear-cache-in-hostinger/).
+
 - Home, category, article, search, and policy pages return the expected content.
 - Imported Tamil URLs and image URLs resolve on the live domain.
 - Administrator login, article save, image upload, and campaign management work.
