@@ -1,3 +1,11 @@
+<IfModule LiteSpeed>
+  <FilesMatch "\.php$">
+    SetHandler application/x-lsphp83
+  </FilesMatch>
+  # Dynamic pages include view counts and newsroom state.
+  CacheLookup off
+</IfModule>
+
 Options -Indexes
 RewriteEngine On
 

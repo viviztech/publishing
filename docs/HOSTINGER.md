@@ -35,6 +35,8 @@ For a brand-new empty sample installation instead, import database/schema.sql th
 
 Use PHP 8.3 for the initial deployment because this is the version verified locally. Enable PDO, pdo_mysql, curl, dom, mbstring, fileinfo, and session.
 
+The root .htaccess selects Hostinger's PHP 8.3 LiteSpeed handler for this website and disables dynamic LiteSpeed page caching so counters and admin state stay current. The SSH PHP version can differ from the web version; verify the actual website after deployment. See [per-website PHP versions](https://www.hostinger.com/support/4047803-how-to-change-the-php-version-for-subfolders-or-subdomains-in-hostinger/).
+
 Set upload_max_filesize to at least 8M and post_max_size to at least 12M. Keep display_errors off. A memory_limit of at least 256M is a starting configuration for imports; check actual plan limits and workload before raising it.
 
 Hostinger exposes these settings under the website dashboard's PHP Configuration tool. See [PHP configuration](https://www.hostinger.com/support/4667515-how-to-manage-php-extensions-and-options-in-hostinger/).
