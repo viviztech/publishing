@@ -11,6 +11,10 @@ $router=new Router();
 $public=new PublicController();
 $admin=new AdminController();
 
+if(($_SERVER['REQUEST_METHOD']??'GET')==='GET'&&($legacy=\App\Services\LegacyRedirects::resolve($_SERVER['REQUEST_URI']??'/'))){
+    header('Location: '.url($legacy),true,301);exit;
+}
+
 $router->get('/',[$public,'home']);
 $router->get('/category/{slug}',[$public,'category']);
 $router->get('/article/{slug}',[$public,'article']);
