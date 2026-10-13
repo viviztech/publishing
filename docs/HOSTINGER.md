@@ -17,6 +17,8 @@ Deploy Wisdom News to the Hostinger cloud hosting website for wisdomnews.in usin
 
 Enter passwords and private keys directly in the relevant hosting tools or server configuration. GitHub needs source code and the empty .env.example template.
 
+Production web requests reuse persistent PDO connections by default. This avoids Hostinger's connection-creation rate limit during traffic bursts. The .env.example sets DB_PERSISTENT=true; use false for local development if necessary. See [Hostinger's MySQL connection guidance](https://www.hostinger.com/support/how-to-fix-mysql-operation-not-permitted-error/).
+
 Hostinger lists database names and users under the website's MySQL tools; its in-hosting database hostname is localhost. See [database details](https://www.hostinger.com/support/1583552-how-to-find-your-mysql-database-details-in-hostinger/).
 
 ## Prepare the existing WordPress site

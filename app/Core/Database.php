@@ -20,6 +20,7 @@ final class Database
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES => false,
                 PDO::ATTR_STRINGIFY_FETCHES => false,
+                PDO::ATTR_PERSISTENT => Env::bool('DB_PERSISTENT', Env::get('APP_ENV')==='production' && PHP_SAPI!=='cli'),
             ]);
             // Publication dates and campaign schedules use the configured app timezone.
             $offset=(new \DateTimeImmutable('now'))->format('P');
