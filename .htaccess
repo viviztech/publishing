@@ -7,6 +7,7 @@
 </IfModule>
 
 Options -Indexes
+AddType image/avif .avif
 RewriteEngine On
 
 # Keep application source, credentials, database scripts, and runtime data private.
