@@ -17,7 +17,7 @@ RewriteRule ^(?:\.env(?:\..*)?|package(?:-lock)?\.json|tsconfig\.json|README\.md
 RewriteRule ^assets/(.*)$ public/assets/$1 [END]
 
 # Serve mirrored and local editorial images without executing uploaded files.
-RewriteRule ^uploads/([A-Za-z0-9/_-]+\.(?:jpe?g|png|webp|gif))$ public/uploads/$1 [END,NC]
+RewriteRule ^uploads/([A-Za-z0-9/_-]+\.(?:jpe?g|png|webp|gif|avif))$ public/uploads/$1 [END,NC]
 
 # Prevent visitors from bypassing the front controller through /public/.
 RewriteRule ^public(?:/|$) - [F,L,NC]
