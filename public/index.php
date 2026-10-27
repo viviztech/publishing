@@ -30,6 +30,8 @@ $router->get('/admin/articles',[$admin,'articles']);
 $router->get('/admin/articles/edit/{id}',[$admin,'articleForm']);
 $router->get('/admin/articles/create',[$admin,'articleForm']);
 $router->post('/admin/articles/save',[$admin,'articleSave']);
+$router->post('/admin/articles/translate-title',[$admin,'articleTranslateTitle']);
+$router->post('/admin/articles/upload-image',[$admin,'articleImageUpload']);
 $router->post('/admin/articles/delete/{id}',[$admin,'articleDelete']);
 $router->get('/admin/media',[$admin,'media']);
 $router->post('/admin/media/upload',[$admin,'mediaUpload']);

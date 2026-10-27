@@ -6,10 +6,12 @@ namespace App\Controllers;
 use App\Core\Auth;
 use App\Core\Csrf;
 use App\Core\Database;
+use App\Core\Env;
 use App\Services\HtmlSanitizer;
 use App\Services\MediaStorage;
 use App\Services\SiteAnalytics;
 use App\Services\AdPlacements;
+use App\Services\ArticleTitleTranslator;
 use PDO;
 
 final class AdminController
@@ -76,20 +78,88 @@ final class AdminController
             if($this->db->query("SHOW TABLES LIKE 'article_categories'")->fetchColumn()){$s=$this->db->prepare('SELECT category_id FROM article_categories WHERE article_id=?');$s->execute([$article['id']]);$selectedCategories=array_map('intval',$s->fetchAll(PDO::FETCH_COLUMN));}
         }
         $r2Configured=MediaStorage::configured();$storageLocal=MediaStorage::local();
-        render_admin('article-form',compact('article','lookups','selectedTags','selectedCategories','r2Configured','storageLocal')+['pageTitle'=>$article?'Edit article':'New article']);
+        $translationEnabled=Env::bool('ARTICLE_TITLE_TRANSLATION_ENABLED',false);
+        $englishTitle=$article?ArticleTitleTranslator::cached((string)($article['title_ta']?:$article['title'])):null;
+        render_admin('article-form',compact('article','lookups','selectedTags','selectedCategories','r2Configured','storageLocal','englishTitle','translationEnabled')+['pageTitle'=>$article?'கட்டுரையைத் திருத்து':'புதிய கட்டுரை']);
+    }
+    public function articleTranslateTitle(): void
+    {
+        if(!Auth::check())$this->articleJson(['error'=>'உங்கள் அமர்வு முடிந்துவிட்டது. மீண்டும் உள்நுழையவும்.'],401);
+        $token=(string)($_POST['_csrf']??$_SERVER['HTTP_X_CSRF_TOKEN']??'');
+        $expected=(string)($_SESSION['_csrf']??'');
+        if($expected===''||$token===''||!hash_equals($expected,$token))$this->articleJson(['error'=>'பக்கத்தைப் புதுப்பித்து மீண்டும் முயற்சிக்கவும்.'],419);
+        Csrf::verify();
+        $id=(int)($_POST['id']??0);
+        if($id){$statement=$this->db->prepare('SELECT created_by FROM articles WHERE id=?');$statement->execute([$id]);$owner=$statement->fetchColumn();if($owner===false)$this->articleJson(['error'=>'கட்டுரை கிடைக்கவில்லை.'],404);if(Auth::user()['role']==='author'&&(int)$owner!==Auth::id())$this->articleJson(['error'=>'இந்தக் கட்டுரையைத் திருத்த அனுமதி இல்லை.'],403);}
+        $title=ArticleTitleTranslator::normalize((string)($_POST['title']??''));
+        if($title===''||mb_strlen($title)>255)$this->articleJson(['error'=>'255 எழுத்துகளுக்குள் ஒரு தலைப்பை உள்ளிடவும்.'],422);
+        if(!Env::bool('ARTICLE_TITLE_TRANSLATION_ENABLED',false)&&preg_match('/[\x{0B80}-\x{0BFF}]/u',$title)&&ArticleTitleTranslator::cached($title)===null)$this->articleJson(['error'=>'தானியங்கி மொழிபெயர்ப்பு இன்னும் செயல்படுத்தப்படவில்லை. இணைப்புக்கான ஆங்கிலத் தலைப்பை உள்ளிடவும்.'],503);
+        // Translation can take a few seconds; do not lock the editor's other requests.
+        session_write_close();
+        try{
+            $english=(new ArticleTitleTranslator())->translate($title);
+            $this->articleJson(['english_title'=>$english,'slug'=>$this->uniqueArticleSlug(ArticleTitleTranslator::asciiSlug($english),$id)]);
+        }catch(\InvalidArgumentException){$this->articleJson(['error'=>'தலைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.'],422);}
+        catch(\Throwable){$this->articleJson(['error'=>'மொழிபெயர்ப்பு தற்போது கிடைக்கவில்லை. மீண்டும் முயற்சிக்கவும் அல்லது ஆங்கிலத் தலைப்பை உள்ளிடவும்.'],503);}
+    }
+    public function articleImageUpload(): void
+    {
+        if(!Auth::check())$this->articleJson(['error'=>'உங்கள் அமர்வு முடிந்துவிட்டது. மீண்டும் உள்நுழையவும்.'],401);
+        $token=(string)($_POST['_csrf']??$_SERVER['HTTP_X_CSRF_TOKEN']??'');
+        $expected=(string)($_SESSION['_csrf']??'');
+        if($expected===''||$token===''||!hash_equals($expected,$token))$this->articleJson(['error'=>'பக்கத்தைப் புதுப்பித்து மீண்டும் முயற்சிக்கவும்.'],419);
+        Csrf::verify();
+        $alt=trim((string)($_POST['alt_text']??''));
+        if($alt===''||mb_strlen($alt)>255)$this->articleJson(['error'=>'படத்திற்கான விளக்கத்தை 255 எழுத்துகளுக்குள் உள்ளிடவும்.'],422);
+        if(!MediaStorage::configured())$this->articleJson(['error'=>'படப் பதிவேற்றம் தற்போது கிடைக்கவில்லை. சிறிது நேரம் கழித்து முயற்சிக்கவும்.'],503);
+        $storage=new MediaStorage();
+        try{
+            $media=$storage->upload($_FILES['image']??[],'articles');
+        }catch(\InvalidArgumentException){$this->articleJson(['error'=>'8 MB-க்குள் உள்ள சரியான JPEG, PNG, WebP அல்லது GIF படத்தைத் தேர்ந்தெடுக்கவும்.'],422);}
+        catch(\Throwable){$this->articleJson(['error'=>'படத்தைப் பதிவேற்ற முடியவில்லை. மீண்டும் முயற்சிக்கவும்.'],503);}
+        $media['original_name']=mb_substr(basename((string)($_FILES['image']['name']??'article-image')),0,255);
+        $media['alt_text']=$alt;$media['uploaded_by']=Auth::id();
+        try{
+            $statement=$this->db->prepare('INSERT INTO media(original_name,object_key,url,mime_type,size_bytes,width,height,alt_text,uploaded_by) VALUES(:original_name,:object_key,:url,:mime_type,:size_bytes,:width,:height,:alt_text,:uploaded_by)');
+            $statement->execute($media);$id=(int)$this->db->lastInsertId();
+        }catch(\Throwable){
+            // This upload has not been returned to the editor or linked to a story.
+            try{$storage->delete($media);}catch(\Throwable){error_log('Could not remove an article image after its media record failed to save.');}
+            $this->articleJson(['error'=>'பட விவரங்களைச் சேமிக்க முடியவில்லை. மீண்டும் பதிவேற்றவும்.'],500);
+        }
+        $this->articleJson(['id'=>$id,'url'=>$media['url'],'alt'=>$alt,'width'=>(int)$media['width'],'height'=>(int)$media['height'],'original_name'=>$media['original_name']],201);
+    }
+    private function articleJson(array $data,int $status=200): never
+    {
+        http_response_code($status);header('Content-Type: application/json; charset=utf-8');header('Cache-Control: no-store');
+        echo json_encode($data,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR);exit;
+    }
+    private function uniqueArticleSlug(string $slug,int $id): string
+    {
+        $base=rtrim(mb_substr($slug,0,280),'-');
+        if($base==='')throw new \InvalidArgumentException('Enter a valid article link.');
+        $statement=$this->db->prepare('SELECT COUNT(*) FROM articles WHERE slug=? AND id<>?');
+        $candidate=$base;$suffix=1;
+        while(true){$statement->execute([$candidate,$id]);if(!(int)$statement->fetchColumn())return $candidate;$ending='-'.(++$suffix);$candidate=rtrim(mb_substr($base,0,280-strlen($ending)),'-').$ending;}
     }
     public function articleSave(): void
     {
         Auth::require();
         Csrf::verify();
         $id=(int)($_POST['id']??0);
-        if($id){$ownerStatement=$this->db->prepare('SELECT created_by FROM articles WHERE id=?');$ownerStatement->execute([$id]);$ownerId=$ownerStatement->fetchColumn();if($ownerId===false)abort(404);if(Auth::user()['role']==='author'&&(int)$ownerId!==Auth::id())abort(403);}
+        $existing=null;
+        if($id){$ownerStatement=$this->db->prepare('SELECT created_by,title,title_ta,slug,status FROM articles WHERE id=?');$ownerStatement->execute([$id]);$existing=$ownerStatement->fetch();if(!$existing)abort(404);if(Auth::user()['role']==='author'&&(int)$existing['created_by']!==Auth::id())abort(403);}
+        $tamilOnly=($_POST['tamil_only']??'')==='1';
         $title=trim((string)($_POST['title']??''));
         $titleTa=trim((string)($_POST['title_ta']??''))?:null;
         $summary=trim((string)($_POST['summary']??''));
         $summaryTa=trim((string)($_POST['summary_ta']??''))?:null;
         $content=HtmlSanitizer::clean((string)($_POST['content']??''));
         $contentTa=trim((string)($_POST['content_ta']??''))!==''?HtmlSanitizer::clean((string)$_POST['content_ta']):null;
+        if($tamilOnly){
+            if($summary==='')$summary=excerpt($content,220)?:$title;
+            $titleTa=$title;$summaryTa=$summary;$contentTa=$content;
+        }
         $categoryId=(int)($_POST['category_id']??0);
         $authorId=(int)($_POST['author_id']??0);
         if($title===''||mb_strlen($title)>255||$summary===''||mb_strlen($summary)>500||$content===''||!$categoryId||!$authorId)abort(422,'Title, summary, body, category, and author are required.');
@@ -97,12 +167,38 @@ final class AdminController
         $canonical=trim((string)($_POST['canonical_url']??''));
         if($canonical!==''&&!filter_var($canonical,FILTER_VALIDATE_URL))abort(422,'The canonical URL is invalid.');
         $status=in_array($_POST['status']??'draft',['draft','published','scheduled','archived'],true)?$_POST['status']:'draft';
-        $scheduled=($_POST['scheduled_at']??'')?str_replace('T',' ',(string)$_POST['scheduled_at']).':00':null;
-        if($scheduled&&!\DateTimeImmutable::createFromFormat('Y-m-d H:i:s',$scheduled))abort(422,'The scheduled date is invalid.');
+        $parseArticleDate=static function(string $value,string $message): ?string {
+            if($value==='')return null;
+            $date=\DateTimeImmutable::createFromFormat('!Y-m-d\TH:i',$value);
+            $errors=\DateTimeImmutable::getLastErrors();
+            if(!$date||($errors!==false&&($errors['warning_count']>0||$errors['error_count']>0))||$date->format('Y-m-d\TH:i')!==$value)abort(422,$message);
+            return $date->format('Y-m-d H:i:s');
+        };
+        $scheduled=$parseArticleDate((string)($_POST['scheduled_at']??''),'The scheduled date is invalid.');
         if($status==='scheduled'&&!$scheduled)abort(422,'A scheduled article requires a scheduled date.');
-        $published=($_POST['published_at']??'')?str_replace('T',' ',(string)$_POST['published_at']).':00':($status==='published'?date('Y-m-d H:i:s'):null);
-        if($published&&!\DateTimeImmutable::createFromFormat('Y-m-d H:i:s',$published))abort(422,'The publish date is invalid.');
-        $slug=slugify((string)(($_POST['slug']??'')?:$title));
+        $published=$parseArticleDate((string)($_POST['published_at']??''),'The publish date is invalid.')??($status==='published'?date('Y-m-d H:i:s'):null);
+        $translationWarning=false;
+        $submittedSlug=trim((string)($_POST['slug']??''));
+        if($tamilOnly){
+            $manual=($_POST['slug_mode']??'auto')==='manual';
+            $titleUnchanged=$existing&&ArticleTitleTranslator::normalize($title)===ArticleTitleTranslator::normalize((string)($existing['title_ta']?:$existing['title']));
+            if($manual&&$submittedSlug!==''){
+                $slug=slugify($submittedSlug);
+            }elseif($titleUnchanged&&($submittedSlug===''||$submittedSlug===$existing['slug'])&&($existing['status']!=='draft'||$status==='draft'||preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/D',(string)$existing['slug']))){
+                // Editing the body or settings must not change a published article's URL.
+                $slug=(string)$existing['slug'];
+            }else{
+                $english=trim((string)($_POST['english_title']??''));
+                $source=ArticleTitleTranslator::normalize((string)($_POST['translated_source']??''));
+                try{
+                    if($source!==ArticleTitleTranslator::normalize($title)||$english===''||preg_match('/[\x{0B80}-\x{0BFF}]/u',$english))$english=(new ArticleTitleTranslator())->translate($title);
+                    $slug=$this->uniqueArticleSlug(ArticleTitleTranslator::asciiSlug($english),$id);
+                }catch(\Throwable){
+                    if($status!=='draft')abort(422,'ஆங்கில இணைப்பை உருவாக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும் அல்லது இணைப்பை நீங்களே உள்ளிடவும். வரைவாகவும் சேமிக்கலாம்.');
+                    $slug=$this->uniqueArticleSlug(slugify($title),$id);$translationWarning=true;
+                }
+            }
+        }else{$slug=slugify((string)($submittedSlug?:$title));}
         if(mb_strlen($slug)>280)abort(422,'Use a URL slug of up to 280 characters.');
         $duplicate=$this->db->prepare('SELECT COUNT(*) FROM articles WHERE slug=? AND id<>?');$duplicate->execute([$slug,$id]);if($duplicate->fetchColumn())abort(422,'This URL slug is already used by another article.');
         $authorCheck=$this->db->prepare('SELECT COUNT(*) FROM authors WHERE id=?');$authorCheck->execute([$authorId]);if(!$authorCheck->fetchColumn())abort(422,'Choose an existing author.');
@@ -128,7 +224,7 @@ final class AdminController
         $data=[$title,$titleTa,$slug,$summary,$summaryTa,$content,$contentTa,$categoryId,$subcategory,$authorId,$featuredImageId,trim((string)($_POST['image_caption']??'')),$status,$published,$scheduled,(int)isset($_POST['is_featured']),(int)isset($_POST['is_trending']),(int)isset($_POST['is_breaking']),(int)isset($_POST['is_editors_choice']),trim((string)($_POST['seo_title']??'')),trim((string)($_POST['seo_description']??'')),trim((string)($_POST['seo_keywords']??'')),$canonical];
         if($id){$s=$this->db->prepare('SELECT created_by FROM articles WHERE id=?');$s->execute([$id]);$owner=$s->fetchColumn();if($owner===false)abort(404);if(Auth::user()['role']==='author'&&(int)$owner!==Auth::id())abort(403);$sql='UPDATE articles SET title=?,title_ta=?,slug=?,summary=?,summary_ta=?,content=?,content_ta=?,category_id=?,subcategory_id=?,author_id=?,featured_image_id=?,image_caption=?,status=?,published_at=?,scheduled_at=?,is_featured=?,is_trending=?,is_breaking=?,is_editors_choice=?,seo_title=?,seo_description=?,seo_keywords=?,canonical_url=?,updated_by=?,updated_at=NOW() WHERE id=?';$data[] = Auth::id();$data[]=$id;$this->db->prepare($sql)->execute($data);$action='updated';}else{$sql='INSERT INTO articles(title,title_ta,slug,summary,summary_ta,content,content_ta,category_id,subcategory_id,author_id,featured_image_id,image_caption,status,published_at,scheduled_at,is_featured,is_trending,is_breaking,is_editors_choice,seo_title,seo_description,seo_keywords,canonical_url,created_by,updated_by) VALUES('.implode(',',array_fill(0,25,'?')).')';$data[]=Auth::id();$data[]=Auth::id();$this->db->prepare($sql)->execute($data);$id=(int)$this->db->lastInsertId();$action='created';}
         $this->db->prepare('DELETE FROM article_tags WHERE article_id=?')->execute([$id]);$tagStmt=$this->db->prepare('INSERT INTO article_tags(article_id,tag_id) VALUES(?,?)');foreach(array_unique(array_map('intval',$_POST['tags']??[])) as $tagId)if($tagId)$tagStmt->execute([$id,$tagId]);if($this->db->query("SHOW TABLES LIKE 'article_categories'")->fetchColumn()){$this->db->prepare('DELETE FROM article_categories WHERE article_id=?')->execute([$id]);$membership=$this->db->prepare('INSERT INTO article_categories(article_id,category_id) VALUES(?,?)');foreach($categoryIds as $category)$membership->execute([$id,$category]);}
-        $this->db->commit();activity('article_'.$action,"Article {$action}: {$title}",'article',$id);flash('success','Article saved successfully.');redirect('/admin/articles/edit/'.$id);
+        $this->db->commit();activity('article_'.$action,"Article {$action}: {$title}",'article',$id);flash('success',$tamilOnly?'கட்டுரை சேமிக்கப்பட்டது.':'Article saved successfully.');if($translationWarning)flash('error','வரைவு சேமிக்கப்பட்டது. மொழிபெயர்ப்பு கிடைக்காததால் தற்காலிக தமிழிணைப்பு பயன்படுத்தப்பட்டுள்ளது. வெளியிடுவதற்கு முன் ஆங்கில இணைப்பை உருவாக்கவும்.');redirect('/admin/articles/edit/'.$id);
     }
     public function articleDelete(string $id): void { Auth::require(['super-admin','editor']);Csrf::verify();$this->db->prepare('DELETE FROM articles WHERE id=?')->execute([(int)$id]);activity('article_deleted','Article deleted','article',(int)$id);flash('success','Article deleted.');redirect('/admin/articles'); }
     public function media(): void

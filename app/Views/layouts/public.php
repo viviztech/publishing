@@ -7,7 +7,7 @@ $navigation = $nav ?? [];
 $socials = array_filter(['Instagram'=>setting('instagram_url'),'YouTube'=>setting('youtube_url'),'Facebook'=>setting('facebook_url'),'X'=>setting('x_url')]);
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="ta">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#17243a">
   <title><?=e($metaTitle)?></title><meta name="description" content="<?=e($metaDescription)?>">
@@ -16,8 +16,9 @@ $socials = array_filter(['Instagram'=>setting('instagram_url'),'YouTube'=>settin
   <?php if(!empty($ogImage)): ?><meta property="og:image" content="<?=e(url($ogImage))?>"><?php endif; ?>
   <link rel="icon" type="image/svg+xml" href="<?=e(asset('favicon.svg'))?>">
   <link rel="stylesheet" href="<?=e(asset('fonts/fonts.css'))?>">
-  <link rel="stylesheet" href="<?=e(asset('magazine.css'))?>?v=20261013-1">
-  <script type="module" src="<?=e(asset('magazine.js'))?>?v=20261013-1"></script>
+  <link rel="stylesheet" href="<?=e(asset('magazine.css'))?>?v=20261027">
+  <?php if($view==='article'):?><link rel="stylesheet" href="<?=e(asset('article-detail.css'))?>?v=20261027-article"><?php endif;?>
+  <script type="module" src="<?=e(asset('magazine.js'))?>?v=20261027"></script>
 </head>
 <body class="magazine <?=isset($article)?'is-article':''?>">
 <a class="skip-link" href="#content">Skip to content</a>

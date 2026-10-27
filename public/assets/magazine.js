@@ -43,7 +43,7 @@ function readSaved() {
 }
 function persistSaved(items) {
   try { localStorage.setItem(savedKey, JSON.stringify(items)); return true; }
-  catch { announce('Your browser could not save this article.'); return false; }
+  catch { announce('இந்தக் கட்டுரையைச் சேமிக்க முடியவில்லை.'); return false; }
 }
 const article = one('[data-article-id]');
 const saveButtons = all('[data-save-article]');
@@ -53,9 +53,9 @@ function syncSaved() {
   const saved = article ? items.some(item => item.id === article.dataset.articleId) : false;
   saveButtons.forEach(button => {
     button.setAttribute('aria-pressed', String(saved));
-    button.setAttribute('aria-label', saved ? 'Remove this article from saved articles' : 'Save this article');
+    button.setAttribute('aria-label', saved ? 'சேமித்த கட்டுரைகளிலிருந்து நீக்கவும்' : 'இந்தக் கட்டுரையைச் சேமிக்கவும்');
     const label = button.querySelector('[data-save-label]');
-    if (label) label.textContent = saved ? 'Saved' : 'Save article';
+    if (label) label.textContent = saved ? 'சேமிக்கப்பட்டது' : 'சேமிக்கவும்';
   });
 }
 function renderSaved() {
@@ -65,8 +65,8 @@ function renderSaved() {
   const items = readSaved();
   if (items.length === 0) {
     const empty = document.createElement('div'); empty.className = 'saved-empty';
-    const heading = document.createElement('h3'); heading.textContent = 'Your next read starts here.';
-    const text = document.createElement('p'); text.textContent = 'Save an article while you read, and find it here when you want to come back.';
+    const heading = document.createElement('h3'); heading.textContent = 'சேமித்த கட்டுரைகள் இங்கே தோன்றும்.';
+    const text = document.createElement('p'); text.textContent = 'பின்னர் வாசிக்க விரும்பும் கட்டுரையைச் சேமித்து வையுங்கள்.';
     empty.append(heading,text); container.append(empty); return;
   }
   for (const item of items) {
@@ -79,8 +79,8 @@ function renderSaved() {
     const category = document.createElement('p'); category.textContent = item.category || 'Wisdom News';
     const title = document.createElement('h3'); if (/[\u0B80-\u0BFF]/.test(item.title)) title.lang = 'ta';
     const link = document.createElement('a'); link.href = item.path; link.textContent = item.title; title.append(link); copy.append(category,title);
-    const remove = document.createElement('button'); remove.className = 'icon-button'; remove.type = 'button'; remove.textContent = '×'; remove.style.fontSize = '25px'; remove.setAttribute('aria-label','Remove '+item.title+' from saved articles');
-    remove.addEventListener('click', () => { if(persistSaved(readSaved().filter(saved => saved.id !== item.id))) { renderSaved(); syncSaved(); announce('Removed from your reading list.'); container.querySelector('button')?.focus(); } });
+    const remove = document.createElement('button'); remove.className = 'icon-button'; remove.type = 'button'; remove.textContent = '×'; remove.style.fontSize = '25px'; remove.setAttribute('aria-label',item.title+' — சேமித்த கட்டுரைகளிலிருந்து நீக்கவும்');
+    remove.addEventListener('click', () => { if(persistSaved(readSaved().filter(saved => saved.id !== item.id))) { renderSaved(); syncSaved(); announce('சேமித்த கட்டுரைகளிலிருந்து நீக்கப்பட்டது.'); container.querySelector('button')?.focus(); } });
     row.append(imageLink,copy,remove); container.append(row);
   }
 }
@@ -90,7 +90,7 @@ saveButtons.forEach(button => button.addEventListener('click', () => {
   const items = readSaved();
   const exists = items.some(item => item.id === article.dataset.articleId);
   const next = exists ? items.filter(item => item.id !== article.dataset.articleId) : [{id:article.dataset.articleId,path:new URL(article.dataset.articleUrl,location.origin).pathname,title:article.dataset.articleTitle,image:article.dataset.articleImage,category:article.dataset.articleCategory},...items].slice(0,200);
-  if (persistSaved(next)) { syncSaved(); announce(exists ? 'Removed from your reading list.' : 'Saved to your reading list.'); }
+  if (persistSaved(next)) { syncSaved(); announce(exists ? 'சேமித்த கட்டுரைகளிலிருந்து நீக்கப்பட்டது.' : 'கட்டுரை சேமிக்கப்பட்டது.'); }
 }));
 window.addEventListener('storage', event => { if (event.key === savedKey) { syncSaved(); if(one('[data-saved-dialog]')?.open) renderSaved(); } });
 syncSaved();
@@ -103,8 +103,8 @@ all('[data-copy-link]').forEach(button => button.addEventListener('click', async
       const input = document.createElement('textarea'); input.value = link; input.style.position = 'fixed'; input.style.opacity = '0'; document.body.append(input); input.select();
       const copied = document.execCommand('copy'); input.remove(); button.focus(); if (!copied) throw new Error('Clipboard unavailable');
     }
-    announce('Article link copied.');
-  } catch { announce('Could not copy the link. You can copy it from the address bar.'); }
+    announce('கட்டுரையின் இணைப்பு நகலெடுக்கப்பட்டது.');
+  } catch { announce('இணைப்பை நகலெடுக்க முடியவில்லை. முகவரிப் பட்டியிலிருந்து நகலெடுக்கவும்.'); }
 }));
 one('[data-share-article]')?.addEventListener('click', event => {
   const button = event.currentTarget;
@@ -126,24 +126,6 @@ one('[data-story-sort]')?.addEventListener('change', event => event.currentTarge
 
 const prose = one('[data-reading-body]');
 if (prose) {
-  let textSize = 20;
-  try { const stored = Number(localStorage.getItem('wisdom-news-reading-size')); if (stored >= 18 && stored <= 26) textSize = stored; } catch { /* Use the default size. */ }
-  function applyTextSize() {
-    prose.style.setProperty('--reading-size',textSize+'px');
-    const label = one('[data-text-size]'); if (label) label.textContent = String(textSize);
-    const smaller = one('[data-text-smaller]'); const larger = one('[data-text-larger]');
-    if (smaller) smaller.disabled = textSize <= 18; if (larger) larger.disabled = textSize >= 26;
-  }
-  function changeSize(delta) { textSize = Math.max(18,Math.min(26,textSize+delta)); applyTextSize(); try { localStorage.setItem('wisdom-news-reading-size',String(textSize)); } catch { /* Text sizing remains available. */ } }
-  one('[data-text-smaller]')?.addEventListener('click', () => changeSize(-2));
-  one('[data-text-larger]')?.addEventListener('click', () => changeSize(2));
-  applyTextSize();
-  const headings = Array.from(prose.querySelectorAll('h2,h3')).filter(heading => heading.textContent.trim());
-  if (headings.length >= 2) {
-    const container = one('[data-contents-links]');
-    headings.forEach((heading,index) => { if (!heading.id) heading.id = 'reading-section-'+(index+1); const link = document.createElement('a'); link.href = '#'+heading.id; link.textContent = heading.textContent; if (container) container.append(link); });
-    const contents = one('[data-article-contents]'); if (contents) contents.hidden = false;
-  }
   const progress = one('[data-reading-progress]');
   let pending = false;
   function updateProgress() {

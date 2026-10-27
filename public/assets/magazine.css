@@ -234,19 +234,7 @@ ul,ol { padding: 0; }
 .full-image-label { display: inline-flex; align-items: center; gap: 14px; position: absolute; bottom: 18px; right: 18px; padding: 9px 13px; background: rgb(255 255 255 / 94%); color: var(--ink); border-radius: 5px; font-size: 10px; }
 .news-hero-image:hover .full-image-label { color: var(--blue); }
 .news-hero figcaption { color: var(--muted); font-size: 11px; padding: 12px 2px 0; }
-.reading-layout { display: grid; grid-template-columns: 140px minmax(0,1fr) 230px; gap: 38px; padding-top: 9px; }
-.reading-tools { position: sticky; top: 170px; }
-.font-controls { display: flex; justify-content: space-between; align-items: center; gap: 3px; margin: 15px 0; border: 1px solid var(--line); border-radius: 7px; }
-.font-controls button { width: 44px; min-height: 42px; background: none; border: 0; font: 600 16px/1 var(--display); }
-.font-controls button:hover { color: var(--blue); background: var(--paper); }
-.font-controls button:disabled { color: #acb3bf; cursor: default; }
-.font-controls > span { font: 400 11px/1 var(--body); color: var(--muted); }
-.rail-action { display: flex; align-items: center; gap: 7px; font-size: 10px; background: none; border: 0; padding: 7px 0; color: var(--muted); }
-.rail-action .icon { width: 14px; height: 14px; flex-basis: 14px; }
-.article-contents { border-top: 1px solid var(--line); padding-top: 20px; margin-top: 23px; }
-.article-contents nav { display: flex; flex-direction: column; gap: 13px; margin-top: 14px; max-height: 50vh; overflow-y: auto; }
-.article-contents a { font-size: 10px; line-height: 1.9; color: var(--muted); border-left: 2px solid var(--line); padding-left: 10px; }
-.article-contents a:hover { color: var(--blue); border-color: var(--blue); }
+.reading-layout { display: grid; grid-template-columns: minmax(0,1fr) 230px; gap: 48px; padding-top: 9px; }
 .article-reading-column { min-width: 0; }
 .article-prose { font-size: var(--reading-size); line-height: 1.9; color: #29374b; overflow-wrap: break-word; }
 .article-prose:lang(ta) { font-family: 'Noto Serif Tamil',serif; line-height: 2.05; }
@@ -337,7 +325,8 @@ ul,ol { padding: 0; }
   .news-layout { grid-template-columns: minmax(0,1fr) 280px; gap: 30px; }
   .mag-grid { gap: 23px; }
   .mag-grid--four { grid-template-columns: repeat(2,minmax(0,1fr)); row-gap: 34px; }
-  .reading-layout { grid-template-columns: 135px minmax(0,1fr); gap: 35px; }
+  .reading-layout { grid-template-columns: minmax(0,1fr); gap: 35px; }
+  .reading-layout:has(.article-discover .mag-ad) { grid-template-columns: minmax(0,1fr) 230px; }
   .article-discover { display: none; }
   .archive-lead { gap: 28px; }
   .archive-lead h2:lang(ta) { font-size: 21px; }
@@ -380,13 +369,7 @@ ul,ol { padding: 0; }
   .archive-lead h2:lang(ta) { font-size: 18px; }
   .archive-lead p { font-size: 11px; -webkit-line-clamp: 2; }
   .archive-lead-image { aspect-ratio: 1.3; }
-  .reading-layout { grid-template-columns: minmax(0,1fr); }
-  .reading-rail { border-bottom: 1px solid var(--line); padding-bottom: 19px; }
-  .reading-tools { position: static; display: flex; align-items: center; flex-wrap: wrap; gap: 15px; }
-  .reading-tools > .eyebrow { margin-right: auto; }
-  .font-controls { width: 140px; margin: 0; }
-  .article-contents { width: 100%; margin-top: 0; }
-  .article-contents nav { flex-direction: row; flex-wrap: wrap; }
+  .reading-layout,.reading-layout:has(.article-discover .mag-ad) { grid-template-columns: minmax(0,1fr); }
   .article-byline { flex-wrap: wrap; }
   .article-actions { margin-left: auto; }
   .news-hero { margin-bottom: 28px; }
@@ -499,9 +482,6 @@ ul,ol { padding: 0; }
   .news-hero-image { aspect-ratio: 1.5; border-radius: 7px; }
   .full-image-label { bottom: 12px; right: 12px; font-size: 9px; padding: 7px 10px; }
   .reading-layout { gap: 25px; }
-  .reading-tools { gap: 12px; }
-  .reading-tools > .eyebrow { width: calc(100% - 158px); margin-right: 0; }
-  .reading-tools .rail-action { display: none; }
   .article-prose { font-size: calc(var(--reading-size) - 2px); line-height: 1.95; }
   .article-prose:lang(ta) { line-height: 2.05; }
   .article-prose h2 { font-size: 1.28em; }

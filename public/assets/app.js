@@ -99,7 +99,7 @@ try {
     localStorage.removeItem(languageStorageKey);
 }
 catch { }
-applyLanguage('en');
+applyLanguage('ta');
 const menuButton = one('[data-menu-button]');
 const menu = one('[data-menu]');
 menuButton?.addEventListener('click', () => {
@@ -129,17 +129,17 @@ document.querySelectorAll('form[data-confirm]').forEach((form) => {
 });
 document.querySelectorAll('[data-editor]').forEach((editor) => {
     const form = editor.closest('form');
-    const input = editor.parentElement?.querySelector('[data-editor-input]');
+    const input = editor.closest('[data-editor-field], label, .resource-form')?.querySelector('[data-editor-input]');
     form?.addEventListener('submit', () => { if (input)
         input.value = editor.innerHTML; });
 });
 document.querySelectorAll('[data-format]').forEach((button) => {
     button.addEventListener('click', () => {
-        const editor = button.closest('label, .resource-form')?.querySelector('[data-editor]');
+        const editor = button.closest('[data-editor-field], label, .resource-form')?.querySelector('[data-editor]');
         editor?.focus();
         const format = button.dataset.format;
         if (format === 'a') {
-            const href = window.prompt('Link URL (https://…)');
+            const href = window.prompt('இணைப்பு (https://…)');
             if (href && /^https?:\/\//i.test(href))
                 document.execCommand('createLink', false, href);
         }
@@ -153,12 +153,12 @@ document.querySelectorAll('[data-format]').forEach((button) => {
 });
 document.querySelectorAll('[data-insert-image]').forEach((button) => {
     button.addEventListener('click', () => {
-        const container = button.closest('label');
+        const container = button.closest('[data-editor-field], label');
         const editor = container?.querySelector('[data-editor]');
         const picker = container?.querySelector('[data-editor-image]');
         const option = picker?.selectedOptions[0];
         if (!editor || !option?.value) {
-            window.alert('Choose an image from the media library first.');
+            window.alert('முதலில் பட நூலகத்திலிருந்து ஒரு படத்தைத் தேர்ந்தெடுக்கவும்.');
             return;
         }
         editor.focus();
@@ -220,8 +220,8 @@ const filterSubcategories = () => {
     subcategorySelect.disabled = categoryId === '' || available === 0;
     if (subcategoryHelp) {
         subcategoryHelp.textContent = categoryId === ''
-            ? 'Select a category to see its subcategories.'
-            : available === 0 ? 'No subcategories have been created for this category.' : `${available} subcategories available.`;
+            ? 'உட்பிரிவுகளைக் காண முதலில் பிரிவைத் தேர்ந்தெடுக்கவும்.'
+            : available === 0 ? 'இந்தப் பிரிவில் உட்பிரிவுகள் இல்லை.' : `${available} உட்பிரிவுகள் உள்ளன.`;
     }
 };
 categorySelect?.addEventListener('change', filterSubcategories);
@@ -235,13 +235,14 @@ tagFilter?.addEventListener('input', () => {
         if (!label.hidden) matches++;
     });
     const count = one('[data-tag-count]');
-    if (count) count.textContent = matches + ' tags match. Selected tags are retained.';
+    if (count) count.textContent = matches + ' குறிச்சொற்கள் உள்ளன. தேர்ந்தெடுத்தவை தக்கவைக்கப்படும்.';
 });
 document.querySelectorAll('.editor-layout, .resource-form').forEach(form => {
     let dirty = false;
-    form.addEventListener('input', () => { dirty = true; });
-    form.addEventListener('change', () => { dirty = true; });
-    form.addEventListener('submit', event => { if (!event.defaultPrevented) dirty = false; });
+    const markDirty = event => { if (!event.target.closest('[data-body-image-dialog]')) dirty = true; };
+    form.addEventListener('input', markDirty);
+    form.addEventListener('change', markDirty);
+    form.addEventListener('submit', event => { queueMicrotask(() => { if (!event.defaultPrevented) dirty = false; }); });
     window.addEventListener('beforeunload', event => {
         if (dirty) { event.preventDefault(); event.returnValue = ''; }
     });

@@ -19,21 +19,22 @@ if (($user['role'] ?? '') === 'author') {
 $groupKeys = ['Content'=>'admin.content', 'Publishing'=>'admin.publishing', 'System'=>'admin.system'];
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="ta">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
   <title><?=e($pageTitle??'Admin')?> · Newsroom</title>
   <link rel="icon" type="image/svg+xml" href="<?=e(asset('favicon.svg'))?>">
   <link rel="stylesheet" href="<?=e(asset('app.css'))?>"><link rel="stylesheet" href="<?=e(asset('editorial.css'))?>"><link rel="stylesheet" href="<?=e(asset('edition.css'))?>?v=20261009-4">
-  <link rel="stylesheet" href="<?=e(asset('fonts/fonts.css'))?>"><link rel="stylesheet" href="<?=e(asset('admin-publishing.css'))?>">
-  <script type="module" src="<?=e(asset('app.js'))?>" defer></script>
+  <link rel="stylesheet" href="<?=e(asset('fonts/fonts.css'))?>"><link rel="stylesheet" href="<?=e(asset('admin-publishing.css'))?>?v=20261027-images">
+  <script type="module" src="<?=e(asset('app.js'))?>?v=20261027-images" defer></script>
+  <?php if($view==='article-form'):?><script type="module" src="<?=e(asset('article-editor.js'))?>?v=20261027-images"></script><script type="module" src="<?=e(asset('article-images.js'))?>?v=20261027-images"></script><?php endif;?>
 </head>
 <body class="admin-body">
 <?php if(!empty($loginPage)):?>
   <?=$content?>
 <?php else:?>
-  <a class="admin-skip" href="#admin-content">Skip to content</a>
+  <a class="admin-skip" href="#admin-content">உள்ளடக்கத்திற்குச் செல்லவும்</a>
   <div class="admin-shell">
     <aside class="admin-sidebar" id="admin-sidebar" data-admin-sidebar>
       <a class="admin-brand wisdom-admin-brand wisdom-lockup wisdom-lockup-admin" href="<?=e(url('/admin'))?>" aria-label="Wisdom News newsroom"><span class="wisdom-mark" aria-hidden="true">W</span><span class="wisdom-copy"><strong>Wisdom News</strong><small>Newsroom</small></span></a>
@@ -52,7 +53,7 @@ $groupKeys = ['Content'=>'admin.content', 'Publishing'=>'admin.publishing', 'Sys
       <header class="admin-topbar">
         <button type="button" data-admin-menu aria-label="Toggle navigation" data-i18n-aria-label="admin.toggleNavigation" aria-controls="admin-sidebar" aria-expanded="false">☰</button>
         <div><strong><?=e($user['name'])?></strong><span><?=e(ucwords(str_replace('-',' ',$user['role'])))?></span></div>
-        <a class="publication-link" href="<?=e(url('/'))?>" target="_blank" rel="noopener">View publication ↗</a>
+        <a class="publication-link" href="<?=e(url('/'))?>" target="_blank" rel="noopener">இணையதளத்தைப் பார் ↗</a>
         <form action="<?=e(url('/admin/logout'))?>" method="post"><?=csrf_field()?><button class="link-button" data-i18n="admin.signOut">Sign out</button></form>
       </header>
       <main class="admin-content" id="admin-content">
